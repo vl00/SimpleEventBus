@@ -1,0 +1,48 @@
+﻿using SimpleEventBus;
+using System;
+using System.Threading.Tasks;
+
+public class TestEventBus : IEventBus, IPublisher
+{
+    private readonly ISubscriptionsManager _subscriptions;
+    private readonly IEventSerializer<byte[]> _serializer;
+    private readonly IEventReceiver<byte[]> _eventReceiver;
+    private readonly IEventNameTypeResolver _eventNameType;
+
+    public TestEventBus(IEventReceiver<byte[]> eventReceiver, ISubscriptionsManager subscriptions, IEventSerializer<byte[]> eventSerializer, IEventNameTypeResolver eventNameType)
+    {
+        _eventReceiver = eventReceiver;
+        _subscriptions = subscriptions;
+        _serializer = eventSerializer;
+        _eventNameType = eventNameType;
+    }
+
+    public Task Start()
+    {
+        return Task.CompletedTask;
+    }
+
+    public Task Stop()
+    {
+        return Task.CompletedTask;
+    }
+
+    public ISubscriptionsManager SubscriptionsManager { get; }
+
+    public IPublisher GetPublisher(IServiceProvider serviceProvider = null)
+    {
+        return this;
+    }
+
+    public async Task Publish<T>(T @event) where T : IEvent
+    {
+        var eventName = _eventNameType.GetEventName(@event.GetType());
+        var by = _serializer.Serialize(@event);
+
+        await Task.Delay(1000).ConfigureAwait(false);
+
+        await _eventReceiver.OnEventReceived(eventName, by).ConfigureAwait(false);
+    }
+
+    public void Dispose() { }
+}

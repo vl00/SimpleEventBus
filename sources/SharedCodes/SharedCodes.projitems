@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>58acec45-39ba-481e-a562-2230f3c95d81</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>SharedCodes</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Abstractions.Remote\DefaultEventNameTypeResolver.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Abstractions.Remote\EventReceivedFunc.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Abstractions.Remote\IEventNameTypeResolver.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Abstractions.Remote\IEventSerializer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Abstractions\IEvent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Abstractions\IEventBus.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Abstractions\IEventHandler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Abstractions\IPublisher.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Abstractions\ISubscription.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Abstractions\ISubscriptionsManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)InMemory\InMemoryEventBus.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)InMemory\InMemoryPublisher.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)InMemory\InMemorySubscriptionsManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RabbitMQ\DefaultRabbitMQConnection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RabbitMQ\IRabbitMQConnection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RabbitMQ\RabbitMQEventBus.cs" />
+  </ItemGroup>
+</Project>
