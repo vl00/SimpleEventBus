@@ -1,9 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using RabbitMQ.Client.Exceptions;
 using System;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace SimpleEventBus.RabbitMQ
 {
@@ -68,9 +68,8 @@ namespace SimpleEventBus.RabbitMQ
                 if (IsConnected) return true;
 
                 Exception ex = null;
-                for (var i = 0; i < 5; i++)
+                for (int i = 0, c = 5; i < c; i++)
                 {
-                    ex = null;
                     try
                     {
                         _connection = _connectionFactory.CreateConnection();
@@ -79,8 +78,8 @@ namespace SimpleEventBus.RabbitMQ
                     }
                     catch (Exception ex0)
                     {
-                        ex = ex0;
-                        //wait(1s)?
+                        if (i + 1 == c) ex = ex0;
+                        else Task.Delay(500).Wait();
                     }
                 }
                 if (ex != null)

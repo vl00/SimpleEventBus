@@ -8,8 +8,7 @@ namespace SimpleEventBus.RabbitMQ
 {
     static class RabbitMQMsDIExtensions
     {
-        public static SimpleEventBusMsDIBuilder AddRabbitMQ(this SimpleEventBusMsDIBuilder builder, 
-            Action<ISubscriptionsManager> configSubscriptions = null, 
+        public static SimpleEventBusMsDIBuilder AddRabbitMQ(this SimpleEventBusMsDIBuilder builder,  
             EventReceivedFunc configEventReceived = null, 
             Func<IServiceProvider, IEventSerializer<byte[]>> configSerializer = null,
             Func<ConnectionFactory> configConnectionFactory = null)
@@ -23,13 +22,6 @@ namespace SimpleEventBus.RabbitMQ
                 services.TryAddSingleton<IEventNameTypeResolver, DefaultEventNameTypeResolver>();
                 services.TryAddSingleton<IEventBus, RabbitMQEventBus>();
                 services.TryAddSingleton<IRabbitMQConnection, DefaultRabbitMQConnection>();
-
-                services.TryAddSingleton<ISubscriptionsManager>(_ =>
-                {
-                    var smr = new InMemorySubscriptionsManager();
-                    configSubscriptions?.Invoke(smr);
-                    return smr;
-                });
             });
             return builder;
         }

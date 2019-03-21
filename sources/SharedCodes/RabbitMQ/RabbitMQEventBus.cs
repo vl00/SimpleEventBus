@@ -1,11 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using RabbitMQ.Client.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace SimpleEventBus.RabbitMQ
@@ -182,7 +180,7 @@ namespace SimpleEventBus.RabbitMQ
 
         void try_del_queue(IModel channel)
         {
-            channel?.QueueDeleteNoWait(_queueName, false, false);
+            channel.QueueDeleteNoWait(_queueName, false, false);
         }
 
         public IPublisher GetPublisher(IServiceProvider serviceProvider = null) => this;
@@ -202,9 +200,8 @@ namespace SimpleEventBus.RabbitMQ
                     var body = _eventSerializer.Serialize(eventEntity);
 
                     Exception ex = null;
-                    for (var i = 0; i < 5; i++)
+                    for (int i = 0, c = 5; i < c; i++)
                     {
-                        ex = null;
                         try
                         {
                             channel.BasicPublish(BROKER_NAME, eventName, null, body);
@@ -212,8 +209,8 @@ namespace SimpleEventBus.RabbitMQ
                         }
                         catch (Exception ex0)
                         {
-                            ex = ex0;
-                            //wait(1s)?
+                            if (i + 1 == c) ex = ex0;
+                            else Task.Delay(500).Wait();
                         }
                     }
                     if (ex != null)
