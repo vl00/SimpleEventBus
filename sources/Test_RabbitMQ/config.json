@@ -1,0 +1,36 @@
+{
+  "DelayQueues": {
+    "test_delay": {
+      "TtlDlxExchange": {
+        "Name": "test_delay.dx.exchange",
+        "Type": "direct",
+        "Durable": true,
+        "AutoDelete": false,
+        "Arguments": null
+      },
+      "TtlDlxQueue": {
+        "Name": "test_delay.dx.queue",
+        "Durable": true,
+        "Exclusive": false,
+        "AutoDelete": false,
+        "Arguments": {
+          "x-message-ttl": 30000,
+          "x-dead-letter-exchange": "test_delay.fallback.exchange",
+          "x-dead-letter-routing-key": "test_delay"
+        }
+      },
+      "FallbackExchange": {
+        "Name": "test_delay.fallback.exchange",
+        "Type": "fanout",
+        "Durable": true,
+        "AutoDelete": false
+      },
+      "FallbackQueue": {
+        "Name": "test_delay.fallback.queue",
+        "Durable": true,
+        "Exclusive": false,
+        "AutoDelete": false
+      }
+    }
+  }
+}

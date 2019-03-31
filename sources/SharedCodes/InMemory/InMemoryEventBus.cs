@@ -6,20 +6,15 @@ namespace SimpleEventBus.InMemory
 {
     public class InMemoryEventBus : IEventBus
     {
-        IServiceProvider serviceProvider;
-
-        public InMemoryEventBus(IServiceProvider serviceProvider)
+        public InMemoryEventBus(InMemoryPublisher publisher, InMemorySubscriptions subscriptions)
         {
-            this.serviceProvider = serviceProvider;
-            SubscriptionsManager = ((ISubscriptionsManager)serviceProvider.GetService(typeof(ISubscriptionsManager))) ?? throw new ArgumentNullException(nameof(SubscriptionsManager));
+            Subscriptions = subscriptions;
+            Publisher = publisher ?? throw new ArgumentNullException(nameof(Publisher));
         }
 
-        public ISubscriptionsManager SubscriptionsManager { get; }
+        public ISubscriptions Subscriptions { get; }
 
-        public IPublisher GetPublisher(IServiceProvider serviceProvider = null)
-        {
-            return (IPublisher)(serviceProvider ?? this.serviceProvider)?.GetService(typeof(IPublisher));
-        }
+        public IPublisher Publisher { get; }
 
         public Task Start()
         {
@@ -28,14 +23,7 @@ namespace SimpleEventBus.InMemory
 
         public Task Stop()
         {
-            serviceProvider = null;
-            SubscriptionsManager.Clear();
             return Task.CompletedTask;
-        }
-
-        public void Dispose()
-        {
-            _ = Stop();
         }
     }
 }

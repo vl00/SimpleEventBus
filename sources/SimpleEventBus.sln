@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test", "Test\Test.csproj", 
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "SharedCodes", "SharedCodes\SharedCodes.shproj", "{58ACEC45-39BA-481E-A562-2230F3C95D81}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test_RabbitMQ", "Test_RabbitMQ\Test_RabbitMQ.csproj", "{AEC87117-CC2C-4253-A3BA-79B2945253C2}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		SharedCodes\SharedCodes.projitems*{58acec45-39ba-481e-a562-2230f3c95d81}*SharedItemsImports = 13
@@ -20,6 +22,10 @@ Global
 		{5F2562FE-BF3E-42BA-8325-26D76FE39F73}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5F2562FE-BF3E-42BA-8325-26D76FE39F73}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5F2562FE-BF3E-42BA-8325-26D76FE39F73}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AEC87117-CC2C-4253-A3BA-79B2945253C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AEC87117-CC2C-4253-A3BA-79B2945253C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AEC87117-CC2C-4253-A3BA-79B2945253C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AEC87117-CC2C-4253-A3BA-79B2945253C2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

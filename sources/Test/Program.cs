@@ -66,30 +66,24 @@ class Program
 
         c.AddLogging(_ => _.AddConsole());
 
-        var smr = new InMemorySubscriptionsManager();
-        c.AddSingleton<ISubscriptionsManager>(_ => 
-        {
-			smr.Subscribe<XEvent>();
-            smr.Subscribe<SEvent>();
-            smr.Subscribe<SEvent>();
-			return smr;
-        });
-
-        c.AddSingleton(typeof(IEventNameTypeResolver), typeof(DefaultEventNameTypeResolver));
-        c.AddSingleton(typeof(IEventSerializer<byte[]>), typeof(JsonEventSerializer));
-        c.AddSingleton<EventReceivedFunc>(OnHandleReceiverd);
-        c.AddSingleton<IEventBus, RabbitMQEventBus>();
-
-        c.AddSingleton(_ =>
-        {
-            var cff = new RabbitMQ.Client.ConnectionFactory();
-            //cff.AutomaticRecoveryEnabled = false; 
-			cff.TopologyRecoveryEnabled = false;
-            cff.UserName = "root";
-            cff.Password = "root";
-            return cff;
-        });
-        c.AddSingleton<IRabbitMQConnection, DefaultRabbitMQConnection>();
+        c.AddSimpleEventBus()
+            .AddEventNameTypeResolver()
+            .AddEventReceivedFunc(OnHandleReceiverd)
+            .AddEventSerializer<byte[]>(_ => new JsonEventSerializer())
+            .AddSubscribeEventFunc(() => new[]
+            {
+                typeof(XEvent),
+                typeof(SEvent), typeof(SEvent),
+            })
+            .AddRabbitMQ(() =>
+            {
+                var cff = new RabbitMQ.Client.ConnectionFactory();
+                //cff.AutomaticRecoveryEnabled = false; 
+                //cff.TopologyRecoveryEnabled = false;
+                cff.UserName = "root";
+                cff.Password = "root";
+                return cff;
+            });
 
         //c.AddScoped<H0>().AddScoped<H1>().AddScoped<H2>();
         c.AddScoped(typeof(IEventHandler<SEvent>), typeof(H1));
@@ -98,7 +92,7 @@ class Program
 
         var sp = c.BuildServiceProvider() as IServiceProvider;
         log = sp.GetService<ILoggerFactory>().CreateLogger("123");
-        var bus = sp.GetService<IEventBus>();
+        var bus = sp.GetService<RabbitMQEventBus>();
         await bus.Start();
 
         switch (cmd)
@@ -113,9 +107,9 @@ class Program
                 { 
                     log.LogInformation("run p");  
                     Pause();
-                    await bus.GetPublisher().Publish(new SEvent { GID = Guid.NewGuid(), Time = DateTime.Now });
+                    await bus.Publisher.Publish(new SEvent { GID = Guid.NewGuid(), Time = DateTime.Now });
                     Pause();
-                    await bus.GetPublisher().Publish(new XEvent { I = 1000 });
+                    await bus.Publisher.Publish(new XEvent { I = 1000 });
                     Pause();
                 }
                 break;

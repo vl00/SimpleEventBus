@@ -5,14 +5,14 @@ namespace SimpleEventBus
 {
     //need config??
 
-    public interface IEventBus : IDisposable
+    public interface IEventBus
     {
         Task Start();
 
         Task Stop();
 
-        ISubscriptionsManager SubscriptionsManager { get; }
+        ISubscriptions Subscriptions { get; }
 
-        IPublisher GetPublisher(IServiceProvider serviceProvider = null);
+        IPublisher Publisher { get; }
     }
 }

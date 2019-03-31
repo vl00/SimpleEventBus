@@ -13,17 +13,22 @@
     <Compile Include="$(MSBuildThisFileDirectory)Abstractions.Remote\EventReceivedFunc.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Abstractions.Remote\IEventNameTypeResolver.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Abstractions.Remote\IEventSerializer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Abstractions\DefaultEventHandlerProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Abstractions\IEvent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Abstractions\IEventBus.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Abstractions\IEventHandler.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Abstractions\IPublisher.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Abstractions\ISubscription.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Abstractions\ISubscriptionsManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Abstractions\IEventHandlerProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Abstractions\ISubscriptions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DI\InMemoryMsDIExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DI\RabbitMQMsDIExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DI\SimpleEventBusMsDIBuilder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)InMemory\InMemoryEventBus.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)InMemory\InMemoryPublisher.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)InMemory\InMemorySubscriptionsManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)InMemory\InMemorySubscriptions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RabbitMQ\DefaultRabbitMQConnection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RabbitMQ\IRabbitMQConnection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RabbitMQ\RabbitMQEventBus.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RabbitMQ\RabbitMQSubscriptions.cs" />
   </ItemGroup>
 </Project>

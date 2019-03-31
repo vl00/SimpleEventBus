@@ -8,58 +8,64 @@ using System.Threading.Tasks;
 
 namespace SimpleEventBus.RabbitMQ
 {
-    public class RabbitMQEventBus : IEventBus, IPublisher, IDisposable
+    public class RabbitMQEventBus : IEventBus, IPublisher
     {
         const string BROKER_NAME = "simple_event_bus";
 
         private readonly IRabbitMQConnection _persistentConnection;
-        private readonly IServiceProvider _serviceProvider;
         private readonly ILogger _logger;
         private readonly EventReceivedFunc _eventReceiver;
+        private readonly SubscribeEventFunc _subscribeEventFunc;
+        private readonly IEventHandlerProvider _eventHandlerProvider;
         private readonly IEventSerializer<byte[]> _eventSerializer;
         private readonly IEventNameTypeResolver _eventNameTypeResolver;
+        private readonly RabbitMQSubscriptions _subscriptions;
 
         private IModel _consumerChannel;
         private string _queueName; //= "";
 
-        public ISubscriptionsManager SubscriptionsManager { get; }
+        public ISubscriptions Subscriptions => _subscriptions;
 
-        public RabbitMQEventBus(IRabbitMQConnection persistentConnection,
-            IServiceProvider serviceProvider, ILoggerFactory loggerFactory,
-            ISubscriptionsManager subsManager, EventReceivedFunc eventReceiver,
-            IEventSerializer<byte[]> eventSerializer, IEventNameTypeResolver eventNameTypeResolver)
+        public RabbitMQEventBus(ILoggerFactory loggerFactory, 
+            IRabbitMQConnection persistentConnection, 
+            RabbitMQSubscriptions subscriptions, 
+            EventReceivedFunc eventReceiver,
+            SubscribeEventFunc subscribeEventFunc,
+            IEventHandlerProvider eventHandlerProvider,
+            IEventSerializer<byte[]> eventSerializer, 
+            IEventNameTypeResolver eventNameTypeResolver)
         {
             _persistentConnection = persistentConnection ?? throw new ArgumentNullException(nameof(persistentConnection));
             _logger = loggerFactory.CreateLogger<RabbitMQEventBus>();
 
-            _serviceProvider = serviceProvider;
-            SubscriptionsManager = subsManager;
+            _subscriptions = subscriptions;
             _eventReceiver = eventReceiver;
+            _subscribeEventFunc = subscribeEventFunc;
+            _eventHandlerProvider = eventHandlerProvider;
             _eventSerializer = eventSerializer;
             _eventNameTypeResolver = eventNameTypeResolver;
         }
 
-        public Task Start()
+        public async Task Start()
         {
             _queueName = $"simple_event_bus_rq_" + Guid.NewGuid().ToString("n");
 
-            return Task.Factory.StartNew(() =>
+            _subscriptions.Start(BROKER_NAME, _queueName);
+
+            await Task.WhenAll(_subscribeEventFunc.Invoke().Select(_ => _subscriptions.Subscribe(_)));
+
+            await Task.Factory.StartNew(() =>
             {
                 _consumerChannel = CreateConsumerChannel();
-
-                SubscriptionsManager.OnSubscriptionAdded += SubsManager_OnEventAdded;
-                SubscriptionsManager.OnSubscriptionRemoved += SubsManager_OnEventRemoved;
             });
         }
 
-        public Task Stop()
+        public async Task Stop()
         {
-            return Task.Factory.StartNew(() =>
-            {
-                SubscriptionsManager.Clear();
-                SubscriptionsManager.OnSubscriptionAdded -= SubsManager_OnEventAdded;
-                SubscriptionsManager.OnSubscriptionRemoved -= SubsManager_OnEventRemoved;
+            await Subscriptions.Clear();
 
+            await Task.Factory.StartNew(() =>
+            {
                 var channel = _consumerChannel;
                 _consumerChannel = null;
                 if (channel != null)
@@ -73,51 +79,6 @@ namespace SimpleEventBus.RabbitMQ
                 }
             });
         }
-
-        public void Dispose()
-        {
-            Stop();
-        }
-
-        private void SubsManager_OnEventAdded(object sender, ISubscription subscription)
-        {
-            var type = subscription.Type;
-            Task.Factory.StartNew(() =>
-            {
-                if (!_persistentConnection.IsConnected)
-                    _persistentConnection.TryConnect();
-
-                using (var channel = _persistentConnection.CreateChannel())
-                {
-                    channel.QueueBind(
-                        queue: _queueName,
-                        exchange: BROKER_NAME,
-                        routingKey: _eventNameTypeResolver.GetEventName(type),
-                        arguments: null
-                    );
-                }
-            });
-        }
-
-        private void SubsManager_OnEventRemoved(object sender, ISubscription subscription)
-        {
-            var type = subscription.Type;
-            Task.Factory.StartNew(() =>
-            {
-                if (!_persistentConnection.IsConnected)
-                    _persistentConnection.TryConnect();
-
-                using (var channel = _persistentConnection.CreateChannel())
-                {
-                    channel.QueueUnbind(
-                        queue: _queueName,
-                        exchange: BROKER_NAME,
-                        routingKey: _eventNameTypeResolver.GetEventName(type)
-                    );
-                }
-            });
-        }
-
         private IModel CreateConsumerChannel()
         {
             if (!_persistentConnection.IsConnected)
@@ -183,7 +144,7 @@ namespace SimpleEventBus.RabbitMQ
             channel.QueueDeleteNoWait(_queueName, false, false);
         }
 
-        public IPublisher GetPublisher(IServiceProvider serviceProvider = null) => this;
+        public IPublisher Publisher => this;
 
         public Task Publish<T>(T eventEntity) where T : IEvent
         {
@@ -199,12 +160,15 @@ namespace SimpleEventBus.RabbitMQ
                     var eventName = _eventNameTypeResolver.GetEventName(eventEntity?.GetType());
                     var body = _eventSerializer.Serialize(eventEntity);
 
+                    var properties = channel.CreateBasicProperties();
+                    properties.DeliveryMode = 2; // persistent
+
                     Exception ex = null;
                     for (int i = 0, c = 5; i < c; i++)
                     {
                         try
                         {
-                            channel.BasicPublish(BROKER_NAME, eventName, null, body);
+                            channel.BasicPublish(BROKER_NAME, eventName, properties, body);
                             break;
                         }
                         catch (Exception ex0)
@@ -224,12 +188,14 @@ namespace SimpleEventBus.RabbitMQ
 
         Task OnEventReceived(string eventName, byte[] @event)
         {
-            if (SubscriptionsManager.IsEmpty) return Task.CompletedTask;
+            if (Subscriptions.IsEmpty) return Task.CompletedTask;
 
             var eventType = _eventNameTypeResolver.GetEventType(eventName);
             var eo = _eventSerializer.Deserialize(eventType, @event);
 
-            var handlers = SubscriptionsManager.GetHandlers(eventType, _serviceProvider);
+            if (!Subscriptions.HasSubscription(eventType)) return Task.CompletedTask;
+
+            var handlers = _eventHandlerProvider.GetHandlers(eventType);
             if (handlers == null) return Task.CompletedTask;
 
             return _eventReceiver.Invoke(eventType, eo, handlers);
